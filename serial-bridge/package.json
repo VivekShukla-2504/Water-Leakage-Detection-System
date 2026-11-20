@@ -1,0 +1,24 @@
+{
+  "name": "waterguard-serial-bridge",
+  "version": "1.0.0",
+  "description": "Local Serial-to-WebSocket bridge for WaterGuard Smart Water Leakage Detection System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --check server.js"
+  },
+  "keywords": [
+    "waterguard",
+    "arduino",
+    "serialport",
+    "websocket",
+    "iot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "serialport": "^12.0.0",
+    "ws": "^8.18.0"
+  }
+}
+

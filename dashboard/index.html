@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WaterGuard SCADA - Industrial Water Intrusion & Telemetry Surveillance System">
+  <title>WATERGUARD // INDUSTRIAL SCADA TELEMETRY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="scada-theme">
+  <!-- Subtle Industrial Grid Background Overlay -->
+  <div class="hud-grid-overlay" aria-hidden="true"></div>
+
+  <!-- Perimeter Hazard Strobe Bar (Active on Critical Leak) -->
+  <div id="perimeterHazardStrobe" class="hazard-strobe hidden" aria-hidden="true"></div>
+
+  <!-- Primary SCADA Top Header -->
+  <header class="scada-header" role="banner">
+    <div class="header-section header-left">
+      <div class="scada-crest" aria-hidden="true">
+        <!-- High-Precision Industrial Shield & Sensor SVG -->
+        <svg viewBox="0 0 44 44" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="crestGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00f2fe" />
+              <stop offset="50%" stop-color="#0284c7" />
+              <stop offset="100%" stop-color="#0369a1" />
+            </linearGradient>
+            <filter id="neonBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <!-- Hexagonal Cyber Shell -->
+          <polygon points="22,3 39,12 39,32 22,41 5,32 5,12" stroke="url(#crestGlow)" stroke-width="2.5" fill="rgba(2, 132, 199, 0.08)" />
+          <!-- Crosshair Reticle -->
+          <circle cx="22" cy="22" r="14" stroke="#00f2fe" stroke-width="1" stroke-dasharray="3 3" opacity="0.4" />
+          <line x1="22" y1="5" x2="22" y2="10" stroke="#00f2fe" stroke-width="1.5" />
+          <line x1="22" y1="34" x2="22" y2="39" stroke="#00f2fe" stroke-width="1.5" />
+          <line x1="5" y1="22" x2="10" y2="22" stroke="#00f2fe" stroke-width="1.5" />
+          <line x1="34" y1="22" x2="39" y2="22" stroke="#00f2fe" stroke-width="1.5" />
+          <!-- Moisture Core Symbol -->
+          <path d="M22 13C22 13 16 21 16 25C16 28.31 18.69 31 22 31C25.31 31 28 28.31 28 25C28 21 22 13 22 13Z" fill="#00f2fe" filter="url(#neonBlur)" opacity="0.9" />
+          <circle cx="20" cy="23" r="1.5" fill="#ffffff" />
+        </svg>
+      </div>
+      <div class="header-titles">
+        <div class="system-id-badge">
+          <span class="id-tag">SYS-ID: WG-328P</span>
+          <span class="sec-tag">MIL-SPEC 810G</span>
+          <span class="build-tag">REV 3.4.2</span>
+        </div>
+        <h1 class="header-title">WATERGUARD <span class="title-sub">SCADA CORE</span></h1>
+      </div>
+    </div>
+
+    <!-- Center Control: Live Hardware Uplink Status -->
+    <div class="header-section header-center">
+      <div class="live-hardware-status-badge" title="Physical Arduino UNO Link Active">
+        <span class="pill-dot active-dot"></span>
+        <span id="liveUplinkText">LIVE HARDWARE LINK [ACTIVE]</span>
+      </div>
+
+      <div class="network-telemetry-strip">
+        <div class="net-item" title="Local Loopback Latency">
+          <span class="net-label">PING</span>
+          <span class="net-val" id="netPingVal">&lt; 1 ms</span>
+        </div>
+        <div class="net-divider"></div>
+        <div class="net-item" title="Packet Reliability">
+          <span class="net-label">LOSS</span>
+          <span class="net-val" id="netLossVal">0.0%</span>
+        </div>
+        <div class="net-divider"></div>
+        <div class="net-item" title="Hardware Refresh Frequency">
+          <span class="net-label">RATE</span>
+          <span class="net-val">1.0 Hz</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Header: Status Pill, Audio Alarm & UTC Master Clock -->
+    <div class="header-section header-right">
+      <!-- Acoustic Alarm Sound Toggle -->
+      <button type="button" class="hud-tool-btn" id="btnAudioToggle" title="Toggle Acoustic Siren Alarm (Shortcut: M)" aria-label="Toggle Siren Alarm">
+        <svg class="icon-audio-on" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07m3.54-10.61a10 10 0 0 1 0 14.14" stroke-linecap="round"/>
+        </svg>
+        <svg class="icon-audio-off hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/>
+          <line x1="23" y1="9" x2="17" y2="15" stroke-linecap="round"/>
+          <line x1="17" y1="9" x2="23" y2="15" stroke-linecap="round"/>
+        </svg>
+        <span class="tool-btn-label" id="audioStatusText">AUDIO: ON</span>
+      </button>
+
+      <!-- System Connection Pill -->
+      <div class="scada-status-pill" id="systemStatusPill">
+        <span class="beacon-dot" id="systemStatusDot"></span>
+        <span class="beacon-label" id="systemStatusLabel">DEMO RUNNING</span>
+      </div>
+
+      <!-- Master Military Chronometer -->
+      <div class="scada-chronometer" aria-label="Master SCADA Clock">
+        <div class="chrono-time">
+          <span id="liveTime">--:--:--</span>
+          <span class="chrono-ms" id="liveMs">.000</span>
+        </div>
+        <div class="chrono-date" id="liveDate">2026-10-19 UTC+05:30</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Mode Notice / Hardware Alert Banner -->
+  <aside id="liveModeNotice" class="scada-banner hidden" role="region" aria-label="System Notice Banner">
+    <div class="banner-beacon" aria-hidden="true">&#9888;</div>
+    <div class="banner-body">
+      <strong id="noticeTitle" class="banner-title">Live Hardware Link</strong>
+      <span id="noticeDesc" class="banner-desc">Connecting to serial bridge at ws://127.0.0.1:8080...</span>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="btn-terminal-sm" id="btnRetryConnection">Retry Connection</button>
+    </div>
+  </aside>
+
+  <!-- Emergency Ticker Marquee (Appears when LEAK triggered) -->
+  <div id="leakAlertMarquee" class="alert-marquee hidden" aria-live="assertive">
+    <div class="marquee-track">
+      <span class="marquee-item">&#9888; [CRITICAL ALERT] LIQUID INTRUSION DETECTED AT SENSOR ZONE-01 &bull; DIGITAL LOGIC D2 PULLED LOW (0V) &bull; IMMEDIATE VALVE ISOLATION RECOMMENDED &bull; SYSTEM ENTERED HIGH SEVERITY SURVEILLANCE &bull;</span>
+      <span class="marquee-item">&#9888; [CRITICAL ALERT] LIQUID INTRUSION DETECTED AT SENSOR ZONE-01 &bull; DIGITAL LOGIC D2 PULLED LOW (0V) &bull; IMMEDIATE VALVE ISOLATION RECOMMENDED &bull; SYSTEM ENTERED HIGH SEVERITY SURVEILLANCE &bull;</span>
+    </div>
+  </div>
+
+  <!-- Primary Dashboard Layout -->
+  <main class="scada-viewport" role="main">
+    <!-- Top Row: Annunciator Hero + Digital Twin Visualizer + Diagnostics -->
+    <section class="viewport-row row-hero">
+      <!-- Main SCADA Annunciator Card -->
+      <article class="panel panel-annunciator state-nominal" id="mainStatusCard" aria-live="polite">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-corner-bracket top-l"></span>
+            <span class="panel-corner-bracket top-r"></span>
+            <span class="scada-code">PRIMARY ANNUNCIATOR // ZONE-01</span>
+            <span class="panel-badge" id="annunciatorZoneBadge">DUCT_JUNCTION_A</span>
+          </div>
+          <div class="panel-meta-tag" id="lastReadTimeLabel">T-0.0s [REC: NOMINAL]</div>
+        </div>
+
+        <div class="annunciator-body">
+          <div class="annunciator-radar-frame" id="statusHeroIcon" aria-hidden="true">
+            <div class="radar-sweep-beam"></div>
+            <!-- Check Shield SVG -->
+            <svg class="icon-nominal" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <!-- Emergency Hazard SVG -->
+            <svg class="icon-hazard hidden" viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <div class="annunciator-readout">
+            <div class="condition-badge-row">
+              <span class="condition-label">SEVERITY LEVEL</span>
+              <span class="condition-val" id="severityLevelVal">DEFCON 5 // ALL CLEAR</span>
+            </div>
+            <h2 class="annunciator-headline" id="statusHeroTitle">SYSTEM NOMINAL</h2>
+            <p class="annunciator-sop" id="statusHeroAction">Zero moisture detected across probe array. Environmental conditions within nominal thresholds.</p>
+          </div>
+        </div>
+
+        <div class="annunciator-telemetry-bar">
+          <div class="bar-unit">
+            <span class="unit-label">OPERATING STATE</span>
+            <span class="unit-val" id="operatingStateVal">ACTIVE SURVEILLANCE</span>
+          </div>
+          <div class="bar-unit">
+            <span class="unit-label">MITIGATION ACTION</span>
+            <span class="unit-val" id="interventionVal">AUTOMATED LOGGING</span>
+          </div>
+          <div class="bar-unit">
+            <span class="unit-label">SENSOR POLARITY</span>
+            <span class="unit-val" id="polarityVal">ACTIVE-LOW [DO=0]</span>
+          </div>
+          <div class="bar-unit">
+            <span class="unit-label">CONFIDENCE RATING</span>
+            <span class="unit-val unit-green" id="filterConfidenceVal">99.8% FILTERED</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Digital Twin Probe & Hardware Diagnostics Panel -->
+      <article class="panel panel-diagnostics">
+        <div class="panel-header">
+          <span class="scada-code">HARDWARE TWIN & SENSOR TELEMETRY</span>
+          <span class="badge badge-source" id="sensorDiagSourceBadge">HARDWARE STREAM</span>
+        </div>
+
+        <div class="diagnostics-flex-wrap">
+          <!-- Digital Twin Visualizer SVG -->
+          <div class="probe-twin-container" aria-label="Sensor Probe Visualizer" title="LM393 Probe Contact State">
+            <div class="twin-header">LM393 INTERDIGITATED PROBE TWIN</div>
+            <div class="twin-canvas-wrap">
+              <svg class="probe-svg" id="probeTwinSvg" viewBox="0 0 160 110" width="100%" height="110">
+                <defs>
+                  <linearGradient id="pcbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#14532d" />
+                    <stop offset="100%" stop-color="#052e16" />
+                  </linearGradient>
+                  <linearGradient id="goldTrace" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#eab308" />
+                    <stop offset="100%" stop-color="#fef08a" />
+                  </linearGradient>
+                </defs>
+                <!-- PCB Substrate -->
+                <rect x="20" y="10" width="120" height="90" rx="6" fill="url(#pcbGrad)" stroke="#22c55e" stroke-width="1.5" />
+                <circle cx="32" cy="22" r="3" fill="#0f172a" stroke="#22c55e" stroke-width="1" />
+                <circle cx="128" cy="22" r="3" fill="#0f172a" stroke="#22c55e" stroke-width="1" />
+                <!-- Terminal screw mounts -->
+                <rect x="58" y="14" width="18" height="12" rx="2" fill="#64748b" />
+                <rect x="84" y="14" width="18" height="12" rx="2" fill="#64748b" />
+                <!-- Interdigitated Sensing Fingers (Track A) -->
+                <path d="M67 26 V 90 M67 42 H 105 M67 58 H 105 M67 74 H 105" stroke="url(#goldTrace)" stroke-width="3" stroke-linecap="round" />
+                <!-- Interdigitated Sensing Fingers (Track B) -->
+                <path d="M93 26 V 90 M93 34 H 55 M93 50 H 55 M93 66 H 55 M93 82 H 55" stroke="url(#goldTrace)" stroke-width="3" stroke-linecap="round" />
+                <!-- Simulated Water Droplets (Controlled by JS) -->
+                <g id="twinWaterDroplets" class="twin-droplets hidden">
+                  <ellipse cx="80" cy="58" rx="28" ry="18" fill="rgba(6, 182, 212, 0.45)" stroke="#38bdf8" stroke-width="2" />
+                  <ellipse cx="68" cy="54" rx="6" ry="4" fill="#ffffff" opacity="0.6" />
+                  <!-- High-voltage short-circuit spark effect -->
+                  <circle cx="80" cy="58" r="4" fill="#ef4444" class="spark-core" />
+                </g>
+              </svg>
+            </div>
+            <div class="twin-footer">
+              <span class="twin-label">CONTACT STATUS:</span>
+              <span class="twin-status-tag" id="twinStatusTag">DRY AIR // OPEN CKT</span>
+            </div>
+          </div>
+
+          <!-- Grid of Core Microcontroller Readings -->
+          <div class="metrics-scada-grid">
+            <div class="telemetry-cell">
+              <span class="cell-tag">ATMEGA328P PIN D2</span>
+              <div class="cell-value-group">
+                <span class="cell-number" id="valDigitalReading">1</span>
+                <span class="logic-tag logic-high" id="badgeDigitalLogic">HIGH // DRY</span>
+              </div>
+              <span class="cell-sub">LM393 Comparator DO</span>
+            </div>
+
+            <div class="telemetry-cell">
+              <span class="cell-tag">SYSTEM UPTIME</span>
+              <div class="cell-number" id="valUptime">00:00:00</div>
+              <span class="cell-sub" id="valRawUptime">0 ms elapsed</span>
+            </div>
+
+            <div class="telemetry-cell">
+              <span class="cell-tag">HEARTBEAT SEQUENCE</span>
+              <div class="cell-number" id="valHeartbeat">#00000</div>
+              <span class="cell-sub">1 Hz Telemetry Sync</span>
+            </div>
+
+            <div class="telemetry-cell">
+              <span class="cell-tag">SOFTWARE DEBOUNCE</span>
+              <div class="cell-number">50 ms</div>
+              <span class="cell-sub">Non-Blocking Window</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hardware-safety-alert">
+          <span class="safety-icon" aria-hidden="true">&#9432;</span>
+          <span><strong>Engineering Notice:</strong> 3-wire comparator modules (VCC, GND, DO) cannot detect physical wire severance electronically. Ensure cable harness security.</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Middle Row: Digital Storage Oscilloscope (Canvas) + Session Metrics -->
+    <section class="viewport-row row-analytics">
+      <!-- Oscilloscope / Logic Timing Analyzer -->
+      <article class="panel panel-oscilloscope">
+        <div class="panel-header">
+          <div class="osc-title-group">
+            <span class="scada-code">DIGITAL STORAGE OSCILLOSCOPE // PIN D2 TIMELINE</span>
+            <span class="badge badge-osc-sim" id="chartSimulatedBadge">PHOSPHOR BEAM: LIVE LINK</span>
+          </div>
+          <div class="osc-indicators">
+            <span class="osc-legend-item"><span class="osc-led led-norm"></span> 1: DRY (NORMAL)</span>
+            <span class="osc-legend-item"><span class="osc-led led-leak"></span> 0: WET (LEAK ALARM)</span>
+          </div>
+        </div>
+
+        <!-- High-Precision Digital Logic Canvas with Reticle Graticule -->
+        <div class="oscilloscope-screen" id="chartContainer">
+          <div class="scope-grid-graticule" aria-hidden="true"></div>
+          <div class="scope-scanline-beam" aria-hidden="true"></div>
+          <canvas id="timelineChart" width="840" height="190" role="img" aria-label="Logic transition oscilloscope waveform"></canvas>
+        </div>
+
+        <div class="osc-footer">
+          <span class="osc-param">SAMPLING: 1000ms/div &bull; TIMEBASE: ~35s HORIZ &bull; TRIGGER: AUTO [EDGE D2]</span>
+          <span class="osc-depth" id="chartDataCount">RING BUFFER: 0 / 35</span>
+        </div>
+      </article>
+
+      <!-- Key SCADA Session Statistics -->
+      <article class="panel panel-stats">
+        <div class="panel-header">
+          <span class="scada-code">MISSION METRICS & MTBF AUDIT</span>
+          <button type="button" class="btn-micro" id="btnExportLogs" title="Export session telemetry as JSON audit file">EXPORT LOG</button>
+        </div>
+
+        <div class="kpi-stack">
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <span class="kpi-title">TOTAL LEAK EVENTS</span>
+              <span class="kpi-sub">Zone-01 Intrusions</span>
+            </div>
+            <div class="kpi-val kpi-alert" id="statTotalLeaks">0</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <span class="kpi-title">MONITORING DURATION</span>
+              <span class="kpi-sub">Continuous Uptime</span>
+            </div>
+            <div class="kpi-val" id="statSessionDuration">00:00:00</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <span class="kpi-title">FRAMES INGESTED</span>
+              <span class="kpi-sub">NDJSON Telemetry</span>
+            </div>
+            <div class="kpi-val" id="statTotalPackets">0</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-left">
+              <span class="kpi-title">LAST OBSERVED ALARM</span>
+              <span class="kpi-sub">Timestamp of incident</span>
+            </div>
+            <div class="kpi-val kpi-timestamp" id="statLastIncidentTime">NONE RECORDED</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Bottom Row: Event Chronology Audit Table + SCADA Mission Controls -->
+    <section class="viewport-row row-controls">
+      <!-- Audit Chronology Table -->
+      <article class="panel panel-history">
+        <div class="panel-header">
+          <div class="history-title-wrap">
+            <span class="scada-code">IMMUTABLE EVENT AUDIT CHRONOLOGY</span>
+            <span class="badge badge-neutral" id="eventCountBadge">0 LOGS</span>
+          </div>
+          <div class="history-actions">
+            <button type="button" class="btn-terminal-sm btn-terminal-danger" id="btnClearHistory">PURGE LOG</button>
+          </div>
+        </div>
+
+        <div class="terminal-table-container" tabindex="0" role="region" aria-label="Real-time event chronicle table">
+          <table class="scada-table" id="eventTable">
+            <thead>
+              <tr>
+                <th scope="col">TIMESTAMP</th>
+                <th scope="col">SEVERITY / STATE</th>
+                <th scope="col">D2 LOGIC</th>
+                <th scope="col">SOURCE CHANNEL</th>
+                <th scope="col">DIAGNOSTIC DISPATCH</th>
+              </tr>
+            </thead>
+            <tbody id="eventTableBody">
+              <tr class="empty-row" id="emptyRowPlaceholder">
+                <td colspan="5">AWAITING SYSTEM EVENTS... INITIALIZE SIMULATOR OR CONNECT HARDWARE LINK.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <!-- SCADA Hardware Operations Panel -->
+      <article class="panel panel-controls">
+        <div class="panel-header">
+          <span class="scada-code">HARDWARE OPERATIONS // CONTROLS</span>
+          <span class="badge badge-accent">LIVE LINK</span>
+        </div>
+
+        <p class="console-prompt">
+          Physical hardware console. Real-time digital telemetry from Arduino UNO on COM3.
+        </p>
+
+        <div class="control-grid-scada">
+          <button type="button" class="btn-scada btn-scada-start" id="btnReconnectBridge" title="Reconnect WebSocket Bridge (Shortcut: R)">
+            <span class="btn-sym">&#8635;</span> RECONNECT
+          </button>
+          <button type="button" class="btn-scada btn-scada-stop" id="btnToggleAudioAction" title="Mute or Unmute Audio Siren (Shortcut: M)">
+            <span class="btn-sym">&#128266;</span> MUTE SIREN
+          </button>
+          <button type="button" class="btn-scada btn-scada-reset" id="btnFullscreenAction" title="Toggle Fullscreen View (Shortcut: F)">
+            <span class="btn-sym">&#9974;</span> FULLSCREEN
+          </button>
+        </div>
+
+        <div class="scada-divider"></div>
+
+        <!-- Hardware Calibration & Diagnostic Card -->
+        <div class="emergency-trigger-bay">
+          <div class="bay-header">
+            <span class="bay-tag">SENSOR POTENTIOMETER CALIBRATION</span>
+            <span class="bay-sub">Turn white screw on blue module counter-clockwise until bottom red LED turns OFF.</span>
+          </div>
+          <div class="hardware-cal-box">
+            <div class="cal-step">&bull; <strong>Dry State:</strong> Bottom LED should be OFF (Pin D2 = HIGH / 1).</div>
+            <div class="cal-step">&bull; <strong>Wet State:</strong> Touch probe with water &rarr; Bottom LED turns ON (Pin D2 = LOW / 0).</div>
+            <div class="cal-step">&bull; <strong>Adjustment:</strong> Rotate blue potentiometer screw counter-clockwise to reduce sensitivity.</div>
+          </div>
+        </div>
+
+        <div class="keyboard-shortcuts-hint">
+          <span>SHORTCUTS:</span>
+          <code>[M] Mute Siren</code>
+          <code>[F] Fullscreen HUD</code>
+          <code>[R] Reconnect Link</code>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- Clear History Confirmation Dialog -->
+  <dialog class="scada-modal" id="confirmClearModal" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="modal-terminal-box">
+      <div class="modal-term-header">
+        <span class="modal-term-dot"></span>
+        <span class="modal-term-title" id="modalTitle">SECURITY CONFIRMATION // PURGE AUDIT LOG</span>
+      </div>
+      <p class="modal-term-body" id="modalDesc">
+        ATTENTION: You are about to purge all recorded telemetry and incident timestamps from the volatile memory cache. This action is irreversible.
+      </p>
+      <div class="modal-term-footer">
+        <button type="button" class="btn-terminal-sm" id="btnModalCancel">ABORT [ESC]</button>
+        <button type="button" class="btn-terminal-sm btn-terminal-danger" id="btnModalConfirm">CONFIRM PURGE</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- SCADA Master Footer -->
+  <footer class="scada-footer" role="contentinfo">
+    <div class="footer-segment">
+      <span class="footer-chip">NODE: ATMEGA328P-PU</span>
+      <span class="footer-chip">BUS: USB-SERIAL @ 9600 8N1</span>
+      <span class="footer-chip">SECURITY: LOCALHOST ONLY [127.0.0.1]</span>
+    </div>
+    <div class="footer-segment">
+      <span>WATERGUARD ENTERPRISE SCADA v3.4 &bull; ZERO EXTERNAL DEPENDENCIES</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
